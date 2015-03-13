@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="apps"/>
+	<classpathentry kind="src" path="sphinx4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/ant-contrib-0.6.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/batch.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/js.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/jsapi.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/sphinx4.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/tags.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/TIDIGITS_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"/>
+	<classpathentry kind="lib" path="C:/sphinx4-1.0beta6/lib/WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
