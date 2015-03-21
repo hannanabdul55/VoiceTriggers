@@ -1,70 +1,188 @@
 package com.example.voicetriggers;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+
 import android.media.AudioManager;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.Data;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.DataBlocker;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.DataEndSignal;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.DataProcessor;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FloatData;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FrontEnd;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.feature.LiveCMN;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.filter.Preemphasizer;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.util.AudioFileDataSource;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.util.props.ConfigurationManager;
 
+/**
+ * @author Abdul Hannan kanji
+ *         To know more about the Activity class refer to
+ * @see android.app.Activity
+ */
 public class MainActivity extends Activity {
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+
+    //Declare local methods used
+    TextView tv;
+    Button btn_choose;
+    Intent chooseInputFileIntent = null;
+    boolean isFileChosen = false;
+    public static Context con;
+
+
+    //SPHINX specific variables
+    DataProcessor last_d;
+    AudioFileDataSource dataSource;
+    AudioManager manager;
+    URL audioURL;
+    ConfigurationManager cm;
+    FrontEnd frontend;
+    URL configURL;
+
+
+    /**
+     * @param savedInstanceState onCreate function
+     * @throws java.io.IOException when any of the files (Config file or Input file is not present
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-        URL audioURl;
-        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        initActivityparams();
 
         try {
+            init_sphinx_params();
+        } catch (IOException e) {
+            Toast.makeText(this, "Unable to Initialize Sphinx parameters, try reinstalling the application", Toast.LENGTH_LONG).show();
+            ;
+            Log.d("SPHINX_LOG", "PARAM_INIT_FAILURE");
+            e.printStackTrace();
+        }
+        con = this;
+        Data d = last_d.getData();
+        Log.d("SPEECH_DATA", d.toString());
+        String str = "";
+        String tmp = "";
+        FileWriter writer;
+        long time = System.currentTimeMillis();
+        frontend.initialize();
+        last_d = frontend.getLastDataProcessor();
+        while (!((d = last_d.getData()) instanceof DataEndSignal)) {
 
-            audioURl = new File("/sdcard/Download/hello.wav").toURI().toURL();
-            Log.d("AUDIO_URL",audioURl.getFile());
-            InputStream is = getResources().openRawResource(R.raw.hello);
+            if (d instanceof FloatData) {
+                tmp = Arrays.toString(((FloatData) d).getValues()) + "\n";
+                //Log.d("SPEECH_LOG", tmp);
+                //str.append(Arrays.toString(((FloatData) d).getValues()) + "\n");
+                //str += tmp;
+            } else if (d instanceof SpeechStartSignal) {
+                Log.d("SPEECH_LOG", "Start of a speech!\n");
+                //str +="Start of a speech!\n";
+                //str.append("Start of a speech!\n");
 
-            //InputStream stream = new FileInputStream("hello.txt");
-            //Log.d("INPUT_STREAM_NULL", (is == null) ? "NULL" : "NOT_NULL");
-            //InputStream i = audioURl.openStream();
-            //Log.d("First Byte", (String) Character.toString((char) stream.read()));
-            URL configURL = new File("/sdcard/Download/config.xml").toURI().toURL();
-            Log.d("CONFIG_URL_NULL", (configURL==null)?"NULL":"NOT_NULL");
+            } else if (d instanceof SpeechEndSignal) {
+                Log.d("SPEECH_LOG", "End of a speech\n");
+                //str+="Start of a speech!\n";
+                //str.append("End of a speech!\n");
+            }
+        }
+        time = System.currentTimeMillis() - time;
+        tv.setText("TIME TAKEN: " + time + "ms");
+        Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show();
 
-            ConfigurationManager cm = new ConfigurationManager(configURL);
-            FrontEnd frontend = (FrontEnd)cm.lookup("epFrontEnd");
-//            AudioFileDataSource dataSource = new AudioFileDataSource();
+    }
+
+    public boolean start_recognition() {
+
+        return false;
+    }
+
+    /**
+     * Initialize the parameters used by the Activity class
+     */
+    public void initActivityparams() {
+        manager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        tv = (TextView) findViewById(R.id.log);
+        btn_choose = (Button) findViewById(R.id.button_choose);
+    }
+
+
+    /**
+     * Initialize all the Sphinx specific parameters which is used later
+     */
+    public void init_sphinx_params() throws IOException {
+        if (audioURL == null)
+            audioURL = new File("/sdcard/Download/hello.wav").toURI().toURL();
+
+        Log.d("AUDIO_URL", audioURL.getFile());
+        InputStream is = getResources().openRawResource(R.raw.hello);
+
+        configURL = new File("/sdcard/Download/config.xml").toURI().toURL();
+        Log.d("CONFIG_URL_NULL", (configURL == null) ? "NULL" : "NOT_NULL");
+
+        cm = new ConfigurationManager(configURL);
+        frontend = (FrontEnd) cm.lookup("epFrontEnd");
+        dataSource = (AudioFileDataSource) cm.lookup("audioFileDataSource");
+        dataSource.setAudioFile(audioURL, null);
+
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+
+    /**
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     * @see android.app.Activity for more info
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case Constant.RESULT_INPUT_FILE: {
+                try {
+                    audioURL = new File(data.getData().getPath()).toURI().toURL();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                    audioURL = null;
+                    Log.d("InputFileError", "Malformed URL Input file");
+                    isFileChosen = true;
+                }
+                break;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    /**
+     * Temporary function for doing some dummy stuff
+     */
+    private void helper() {
+        //            AudioFileDataSource dataSource = new AudioFileDataSource();
 //            DataBlocker blocker = new DataBlocker();
 //            SpeechClassifier sClassifier = new SpeechClassifier();
 //            NonSpeechDataFilter nSpeech = new NonSpeechDataFilter();
@@ -88,48 +206,21 @@ public class MainActivity extends Activity {
 //            procs.add(dct);
 //            procs.add(liveCMN);
 //            procs.add(featext);
-//            dataSource.setAudioFile(audioURl, null);
+//            dataSource.setAudioFile(audioURL, null);
 //            FrontEnd frontend = new FrontEnd(procs);
-            AudioFileDataSource dataSource = (AudioFileDataSource)cm.lookup("audioFileDataSource");
-            dataSource.setAudioFile(audioURl,null);
-            frontend.initialize();
-            DataProcessor last_d = frontend.getLastDataProcessor();
-            //DataProcessor last_d = frontend.getLastDataProcessor();
-            Data d = last_d.getData();
-          Log.d("SPEECH_DATA",d.toString());
-            //Toast.makeText(getBaseContext(), d.toString(), Toast.LENGTH_SHORT).show();
-            FileWriter writer;
-//            try {
-                //writer = new FileWriter(new File("output-blind-1.txt"));
 
-                while (!((d = last_d.getData()) instanceof DataEndSignal)) {
-                    if (d instanceof FloatData)
-                        Log.d("SPEECH_LOG", Arrays.toString(((FloatData) d).getValues()) + "\n");
-                    else if (d instanceof SpeechStartSignal) {
-                        Log.d("SPEECH_LOG", "Start of a speech!\n");
-                    } else if (d instanceof SpeechEndSignal) {
-                        Log.d("SPEECH_LOG", "End of a speech\n");
-                    }
-                }
-                Toast.makeText(this,"Hello",Toast.LENGTH_SHORT).show();
-                //writer.close();
-//            } catch (MalformedURLException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//                audioURl = null;
-//            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
+    }
+
+
+    class OnFileChooseListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View v) {
+            chooseInputFileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+            chooseInputFileIntent.setType("audio.x-wav");
+            startActivityForResult(chooseInputFileIntent, Constant.RESULT_INPUT_FILE);
+            Log.d("FILE_CHOOSE_CLICK", "File Choose Intent shown");
         }
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
+    }
 }
+
