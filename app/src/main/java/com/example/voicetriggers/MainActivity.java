@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import android.media.AudioManager;
 import android.view.View;
@@ -93,11 +96,14 @@ public class MainActivity extends Activity {
         long time = System.currentTimeMillis();
         frontend.initialize();
         last_d = frontend.getLastDataProcessor();
+        Thread t = new Thread(new RecogntionRunner());
+        t.start();
         while (!((d = last_d.getData()) instanceof DataEndSignal)) {
 
             if (d instanceof FloatData) {
                 //tmp = Arrays.toString(((FloatData) d).getValues()) + "\n";
-                Log.d("SPEECH_LOG", Long.toString(((FloatData) d).getFirstSampleNumber()));
+                //Log.d("SPEECH_LOG", ((FloatData) d).toString());
+                ResultCollector.CollectResult((FloatData) d);
                 //str.append(Arrays.toString(((FloatData) d).getValues()) + "\n");
                 //str += tmp;
             } else if (d instanceof SpeechStartSignal) {
