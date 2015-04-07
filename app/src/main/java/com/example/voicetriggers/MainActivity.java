@@ -1,7 +1,12 @@
 package com.example.voicetriggers;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
@@ -11,15 +16,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.LinkedList;
 
 import android.media.AudioManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.apache.http.client.protocol.RequestAddCookies;
 
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.Data;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.DataEndSignal;
@@ -29,6 +34,7 @@ import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FrontEnd;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.util.AudioFileDataSource;
+import SphinxDemo.sphinx4.edu.cmu.sphinx.result.Result;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.util.props.ConfigurationManager;
 
 /**
@@ -42,6 +48,8 @@ public class MainActivity extends Activity {
     //Declare local methods used
     TextView tv;
     Button btn_choose;
+    Button btn_record;
+    Button btn_analyze;
     Intent chooseInputFileIntent = null;
     boolean isFileChosen = false;
     public static Context con;
@@ -55,8 +63,10 @@ public class MainActivity extends Activity {
     ConfigurationManager cm;
     FrontEnd frontend;
     URL configURL;
+    MediaRecorder mediaRecorder;
 
-
+    boolean speechStarted = false;
+    boolean speechEnded = false;
     /**
      * @param savedInstanceState onCreate function
      */
@@ -66,7 +76,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
         //Initialize the Activity layout fields
         initActivityParams();
-
+        //startActivity(new Intent(this,RecordAudioSample.class));
         //Try Initializing the Sphinx parameters
         try {
             init_sphinx_params();
@@ -81,9 +91,69 @@ public class MainActivity extends Activity {
 
     }
 
+//    @Override
+//    protected void onResume() {
+//        SharedPreferences prefs = (SharedPreferences)getSharedPreferences(Constant.PREF_RECORDER,MODE_PRIVATE);
+//        String s = prefs.getString(Constant.PREF_KEY_TMP_FILE,"");
+//        if(s!="")
+//        {
+//            try {
+//                audioURL = new File(s).toURI().toURL();
+//                init_sphinx_params();
+//            } catch (Exception e) {
+//                audioURL = null;
+//                Toast.makeText(this,"ERROR GETTING RECORDED FILE, ABORTING!",Toast.LENGTH_LONG).show();
+//                finish();
+//                return;
+//            }
+//            try {
+//                init_sphinx_params();
+//            } catch (IOException e) {
+//                Toast.makeText(this,"Error Initializing Sphinx parameters",Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            frontend.initialize();
+//            ResultCollector.resetData();
+//            Data d;
+//            last_d = frontend.getLastDataProcessor();
+////            Thread t = new Thread(new RecognitionRunner());
+////            t.start();
+//            while (!((d = last_d.getData()) instanceof DataEndSignal)) {
+//
+//                if (d instanceof FloatData) {
+//                    //tmp = Arrays.toString(((FloatData) d).getValues()) + "\n";
+//                    //Log.d("SPEECH_LOG" , ((FloatData) d).toString());
+//                    if(speechStarted && !speechEnded)
+//                        ResultCollector.CollectResult((FloatData) d);
+//                    //str.append(Arrays.toString(((FloatData) d).getValues()) + "\n");
+//                    //str += tmp;
+//                } else if (d instanceof SpeechStartSignal) {
+//                    Log.d("SPEECH_LOG", "Start of a speech!\n");
+//                    speechStarted = true;
+//                    //str +="Start of a speech!\n";
+//                    //str.append("Start of a speech!\n");
+//
+//                } else if (d instanceof SpeechEndSignal) {
+//                    Log.d("SPEECH_LOG", "End of a speech\n");
+//                    speechEnded = true;
+//
+//                    //str+="Start of a speech!\n";
+//                    //str.append("End of a speech!\n");
+//                }
+//            }
+//            speechStarted = false;
+//            speechEnded = false;
+//            LinkedList<FloatData> l = ResultCollector.list;
+//            new AnalyzeTask().execute(l);
+//
+//        }
+//        super.onResume();
+//    }
+
     public boolean start_recognition() {
         if (!isRecognizerInit) {
             Toast.makeText(this, "The recognizer failed to initialize. Please restart the app, if problem still persists, please reinstall the application", Toast.LENGTH_LONG).show();
+
             return false;
         } else if (!isFileChosen) {
             Toast.makeText(this, "Please choose an audio file and continue", Toast.LENGTH_LONG).show();
@@ -96,29 +166,45 @@ public class MainActivity extends Activity {
         long time = System.currentTimeMillis();
         frontend.initialize();
         last_d = frontend.getLastDataProcessor();
-        Thread t = new Thread(new RecogntionRunner());
-        t.start();
+        //Thread t = new Thread(new RecognitionRunner());
+        //t.start();
+        int s = 0;
         while (!((d = last_d.getData()) instanceof DataEndSignal)) {
 
             if (d instanceof FloatData) {
                 //tmp = Arrays.toString(((FloatData) d).getValues()) + "\n";
-                //Log.d("SPEECH_LOG", ((FloatData) d).toString());
-                ResultCollector.CollectResult((FloatData) d);
+                //Log.d("SPEECH_LOG" , ((FloatData) d).toString());
+                if (speechStarted && !speechEnded) {
+                    ResultCollector.CollectResult((FloatData) d);
+                    s++;
+                }
                 //str.append(Arrays.toString(((FloatData) d).getValues()) + "\n");
                 //str += tmp;
             } else if (d instanceof SpeechStartSignal) {
                 Log.d("SPEECH_LOG", "Start of a speech!\n");
+                speechStarted = true;
                 //str +="Start of a speech!\n";
                 //str.append("Start of a speech!\n");
 
             } else if (d instanceof SpeechEndSignal) {
                 Log.d("SPEECH_LOG", "End of a speech\n");
+                speechEnded = true;
+
                 //str+="Start of a speech!\n";
                 //str.append("End of a speech!\n");
             }
         }
+        Log.d("SPEECH_SIZE", "" + s);
+        speechStarted = false;
+        speechEnded = false;
+        VoiceAnalyzer.samples.put("SAMPLE", ResultCollector.list);
+
+
+
         time = System.currentTimeMillis() - time;
+
         tv.setText("TIME TAKEN: " + time + "ms");
+
         return false;
     }
 
@@ -132,8 +218,17 @@ public class MainActivity extends Activity {
         btn_run = (Button) findViewById(R.id.btn_run);
         btn_choose.setOnClickListener(new OnFileChooseListener());
         btn_run.setOnClickListener(new OnRunClickListener());
-    }
+        btn_record = (Button) findViewById(R.id.record);
+        btn_record.setOnClickListener(new View.OnClickListener() {
 
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(con, RecordAudioSample.class));
+            }
+        });
+        btn_analyze = (Button) findViewById(R.id.analyze);
+        btn_analyze.setOnClickListener(new OnAnalyzeClickListener());
+    }
 
     /**
      * Initialize all the Sphinx specific parameters which is used later
@@ -174,12 +269,19 @@ public class MainActivity extends Activity {
         switch (requestCode) {
             case Constant.RESULT_INPUT_FILE: {
                 try {
+                    if (data == null || data.getData() == null) {
+                        throw new MalformedURLException();
+                    }
                     audioURL = new File(data.getData().getPath()).toURI().toURL();
                     isFileChosen = true;
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                     audioURL = null;
                     Log.d("InputFileError", "Malformed URL Input file");
+                    isFileChosen = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    audioURL = null;
                     isFileChosen = false;
                 }
                 break;
@@ -188,6 +290,9 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    private void record_audio() {
+
+    }
 
 //    /**
 //     * Temporary function for doing some dummy stuff
@@ -240,6 +345,110 @@ public class MainActivity extends Activity {
         public void onClick(View v) {
             Log.d("SPHINX_LOG", "RECOGNIZER_STARTED");
             start_recognition();
+            VoiceAnalyzer.addSample("SAMPLE_1", ResultCollector.list);
+            ResultCollector.resetData();
+        }
+    }
+
+
+    class OnAnalyzeClickListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View v) {
+            Log.d("SPHINX_LOG", "RECOGNIZER_STARTED");
+            SharedPreferences prefs = (SharedPreferences) getSharedPreferences(Constant.PREF_RECORDER, MODE_PRIVATE);
+            String s = prefs.getString(Constant.PREF_KEY_TMP_FILE, "");
+            if (s != "") {
+                try {
+                    audioURL = new File(s).toURI().toURL();
+                    init_sphinx_params();
+                } catch (Exception e) {
+                    audioURL = null;
+                    Toast.makeText(con, "ERROR GETTING RECORDED FILE, ABORTING!", Toast.LENGTH_LONG).show();
+                    finish();
+                    return;
+                }
+                try {
+                    init_sphinx_params();
+                } catch (IOException e) {
+                    Toast.makeText(con, "Error Initializing Sphinx parameters", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                frontend.initialize();
+                ResultCollector.resetData();
+                Data d;
+                last_d = frontend.getLastDataProcessor();
+//            Thread t = new Thread(new RecognitionRunner());
+//            t.start();
+                LinkedList<FloatData> li = new LinkedList<FloatData>();
+                while (!((d = last_d.getData()) instanceof DataEndSignal)) {
+
+                    if (d instanceof FloatData) {
+                        //tmp = Arrays.toString(((FloatData) d).getValues()) + "\n";
+                        //Log.d("SPEECH_LOG" , ((FloatData) d).toString());
+                        if (speechStarted && !speechEnded)
+                            li.add((FloatData) d);
+                        //str.append(Arrays.toString(((FloatData) d).getValues()) + "\n");
+                        //str += tmp;
+                    } else if (d instanceof SpeechStartSignal) {
+                        Log.d("SPEECH_LOG", "Start of a speech!\n");
+                        speechStarted = true;
+                        //str +="Start of a speech!\n";
+                        //str.append("Start of a speech!\n");
+
+                    } else if (d instanceof SpeechEndSignal) {
+                        Log.d("SPEECH_LOG", "End of a speech\n");
+                        speechEnded = true;
+
+                        //str+="Start of a speech!\n";
+                        //str.append("End of a speech!\n");
+                    }
+                }
+                speechStarted = false;
+                speechEnded = false;
+                Log.d("LIST_LENGTH", "" + li.size());
+                new AnalyzeTask().execute(li);
+
+            }
+        }
+    }
+
+
+    class AnalyzeTask extends AsyncTask<LinkedList<FloatData>, Void, Double> {
+
+        ProgressDialog progressDialog;
+
+        @Override
+        protected Double doInBackground(LinkedList<FloatData>... params) {
+            LinkedList<FloatData> list = params[0];
+            return VoiceAnalyzer.getActionForVoice(list);
+
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(con);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Analyzing Voice Sample");
+            progressDialog.show();
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(Double aDouble) {
+            progressDialog.dismiss();
+            Toast.makeText(getBaseContext(), "Confidence: " + aDouble, Toast.LENGTH_LONG).show();
+            if (con != null) {
+                Dialog d = new Dialog(con);
+                d.setCancelable(true);
+                d.setTitle("The Match percentage is " + aDouble + "%!");
+                super.onPostExecute(aDouble);
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
         }
     }
 }

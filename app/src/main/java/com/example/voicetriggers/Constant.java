@@ -10,4 +10,15 @@ package com.example.voicetriggers;
  */
 public class Constant {
     public static final int RESULT_INPUT_FILE = 1;
+
+
+    public static int SampleRate = 22050;
+    public static boolean BigEndian = false;
+    public static int bytesPerVal = 4;
+    public static boolean signedData = false;
+
+    public static String tempOutFile = "t.wav";
+
+    public static String PREF_RECORDER = "RECORDER";
+    public static String PREF_KEY_TMP_FILE = "TEMP_FILE";
 }

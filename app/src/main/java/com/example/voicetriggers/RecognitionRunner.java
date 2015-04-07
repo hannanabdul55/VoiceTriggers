@@ -7,7 +7,7 @@ import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FloatData;
 /**
  * Created by akanji1 on 24/03/15.
  */
-public class RecogntionRunner implements Runnable {
+public class RecognitionRunner implements Runnable {
     @Override
     public void run() {
         while (true) {

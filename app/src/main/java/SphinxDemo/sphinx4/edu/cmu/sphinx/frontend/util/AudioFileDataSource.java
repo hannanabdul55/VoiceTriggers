@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.example.voicetriggers.Constant;
+
 /**
  * An AudioFileDataSource generates a stream of audio data from a given audio file. All required information concerning
  * the audio format are read directly from the file . One would need to call {@link #setAudioFile(java.io.File,String)}
@@ -171,8 +173,8 @@ public class AudioFileDataSource extends BaseDataProcessor {
         utteranceStarted = false;
 
         //AudioFormat format = inputStream.getFormat();
-        sampleRate = 2250;//(int) format.getSampleRate();
-        bigEndian = false;//format.isBigEndian();
+        sampleRate = Constant.SampleRate;//(int) format.getSampleRate();
+        bigEndian = Constant.BigEndian;//format.isBigEndian();
 
         //String s = format.toString();
         //logger.finer("input format is " + s);
@@ -180,9 +182,9 @@ public class AudioFileDataSource extends BaseDataProcessor {
 //        if (format.getSampleSizeInBits() % 8 != 0)
 //            throw new Error("StreamDataSource: bits per sample must be a multiple of 8.");
 //        bytesPerValue = format.getSampleSizeInBits() / 8;
-        bytesPerValue = 2;
+        bytesPerValue = Constant.bytesPerVal;
         // test whether all files in the stream have the same format
-        signedData = true;
+        signedData = Constant.signedData;
 //        AudioFormat.Encoding encoding = format.getEncoding();
 //        if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
 //            signedData = true;
