@@ -21,4 +21,6 @@ public class Constant {
 
     public static String PREF_RECORDER = "RECORDER";
     public static String PREF_KEY_TMP_FILE = "TEMP_FILE";
+
+    public static String PREF_VOICE_LIST = "PREF_VOICE_LIST";
 }

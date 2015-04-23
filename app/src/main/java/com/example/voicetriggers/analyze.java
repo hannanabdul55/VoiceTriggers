@@ -3,11 +3,9 @@ package com.example.voicetriggers;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Arrays;
 
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FloatData;
 
@@ -52,9 +50,9 @@ public class analyze {
         int len1 = mData1.size();
         int len2 = mData2.size();
         if (len1 < len2)
-            lengthOfOutput = len1;
-        else
             lengthOfOutput = len2;
+        else
+            lengthOfOutput = len1;
     }
 
     public double newPrintAnalysis() {
@@ -172,14 +170,5 @@ public class analyze {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Please specify two text files as arguments");
-            System.exit(1);
-        }
-        analyze A = new analyze(args[0], args[1]);
-        A.newPrintAnalysis();
     }
 }

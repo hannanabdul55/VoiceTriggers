@@ -14,4 +14,5 @@
     <string name="stop_recording">Stop</string>
     <string name="audio_format">Format</string>
     <string name="title_activity_record_audio_sample">RecordAudioSample</string>
+    <string name="title_activity_add_sample">AddSampleActivity</string>
 </resources>

@@ -1,30 +1,27 @@
 package com.example.voicetriggers;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
-
-import android.media.AudioManager;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import org.apache.http.client.protocol.RequestAddCookies;
 
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.Data;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.DataEndSignal;
@@ -34,7 +31,6 @@ import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FrontEnd;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.util.AudioFileDataSource;
-import SphinxDemo.sphinx4.edu.cmu.sphinx.result.Result;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.util.props.ConfigurationManager;
 
 /**
@@ -393,8 +389,6 @@ public class MainActivity extends Activity {
                     } else if (d instanceof SpeechStartSignal) {
                         Log.d("SPEECH_LOG", "Start of a speech!\n");
                         speechStarted = true;
-                        //str +="Start of a speech!\n";
-                        //str.append("Start of a speech!\n");
 
                     } else if (d instanceof SpeechEndSignal) {
                         Log.d("SPEECH_LOG", "End of a speech\n");
@@ -414,15 +408,15 @@ public class MainActivity extends Activity {
     }
 
 
-    class AnalyzeTask extends AsyncTask<LinkedList<FloatData>, Void, Double> {
+    class AnalyzeTask extends AsyncTask<LinkedList<FloatData>, Void, AnalysisResult> {
 
         ProgressDialog progressDialog;
 
         @Override
-        protected Double doInBackground(LinkedList<FloatData>... params) {
+        protected AnalysisResult doInBackground(LinkedList<FloatData>... params) {
             LinkedList<FloatData> list = params[0];
-            return VoiceAnalyzer.getActionForVoice(list);
-
+            AnalysisResult r = VoiceAnalyzer.getActionForVoice(list);
+            return r;
         }
 
         @Override
@@ -435,7 +429,7 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(Double aDouble) {
+        protected void onPostExecute(AnalysisResult aDouble) {
             progressDialog.dismiss();
             Toast.makeText(getBaseContext(), "Confidence: " + aDouble, Toast.LENGTH_LONG).show();
             if (con != null) {

@@ -12,15 +12,21 @@ public class VoiceAnalyzer {
 
     static HashMap<String, LinkedList<FloatData>> samples = new HashMap<String, LinkedList<FloatData>>();
 
-    static double getActionForVoice(LinkedList<FloatData> query) {
+    static AnalysisResult getActionForVoice(LinkedList<FloatData> query) {
+        Double max_val = Double.MIN_VALUE;
+        String selected = "";
         for (String t : samples.keySet()) {
             LinkedList<FloatData> samp = samples.get(t);
 
             analyze runner = new analyze(samp, query);
-            return runner.newPrintAnalysis();
-
+            Double temp = runner.newPrintAnalysis();
+            if (temp > max_val) {
+                max_val = temp;
+                selected = t;
+            }
+//            return runner.newPrintAnalysis();
         }
-        return 0;
+        return new AnalysisResult(selected, samples.get(selected), max_val);
     }
 
     public static void addSample(String key, LinkedList<FloatData> d) {

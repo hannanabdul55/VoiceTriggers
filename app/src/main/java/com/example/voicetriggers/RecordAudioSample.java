@@ -1,11 +1,5 @@
 package com.example.voicetriggers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
@@ -16,6 +10,12 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 public class RecordAudioSample extends Activity {
     private static final int RECORDER_BPP = 16;
     private static final String AUDIO_RECORDER_FILE_EXT_WAV = ".wav";
@@ -24,13 +24,16 @@ public class RecordAudioSample extends Activity {
     private static final int RECORDER_SAMPLERATE = Constant.SampleRate;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-
+    private long VOICE_ID;
     private AudioRecord recorder = null;
     private int bufferSize = 0;
     private Thread recordingThread = null;
     private boolean isRecording = false;
     private String outFile = "";
 
+
+    SharedPreferences prefs;
+    SharedPreferences.Editor editor;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,8 +68,8 @@ public class RecordAudioSample extends Activity {
         if (!file.exists()) {
             file.mkdirs();
         }
-
-        return (file.getAbsolutePath() + "/" + System.currentTimeMillis() + AUDIO_RECORDER_FILE_EXT_WAV);
+        VOICE_ID = System.currentTimeMillis();
+        return (file.getAbsolutePath() + "/" + VOICE_ID + AUDIO_RECORDER_FILE_EXT_WAV);
     }
 
     private String getTempFilename() {
@@ -119,7 +122,6 @@ public class RecordAudioSample extends Activity {
         }
 
         int read = 0;
-
         if (null != os) {
             while (isRecording) {
                 read = recorder.read(data, 0, bufferSize);
