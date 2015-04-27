@@ -279,6 +279,7 @@ public class SpeechActivity extends Activity {
         Log.d("SPEECH_SIZE", "" + s);
         speechStarted = false;
         speechEnded = false;
+
     }
 
 
@@ -292,9 +293,9 @@ public class SpeechActivity extends Activity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }
+        } else
 
-        return super.onOptionsItemSelected(item);
+            return super.onOptionsItemSelected(item);
     }
 
     /**
