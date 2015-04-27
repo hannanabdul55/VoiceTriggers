@@ -7,6 +7,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -34,6 +35,7 @@ public class RecordAudioSample extends Activity {
 
     SharedPreferences prefs;
     SharedPreferences.Editor editor;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -274,11 +276,15 @@ public class RecordAudioSample extends Activity {
 
                     enableButtons(false);
                     stopRecording();
-                    SharedPreferences prefs = (SharedPreferences) getSharedPreferences("RECORDER", MODE_PRIVATE);
+                    SharedPreferences prefs = (SharedPreferences) getSharedPreferences(Constant.PREF_RECORDER, MODE_PRIVATE);
                     SharedPreferences.Editor editor = prefs.edit();
-                    if (outFile != "")
-                        editor.putString("TEMP_FILE", outFile);
-                    editor.commit();
+                    if (outFile != "") {
+                        Log.d("SAVE_TMP_PREF", "Shared teh temp file in shared preferences . FIle: " + outFile);
+                        editor.putString(Constant.PREF_KEY_TMP_FILE, outFile);
+                        editor.commit();
+                    } else {
+                        Log.d("SAVE_TMP_PREF", "Shared teh temp file in shared preferences is empty .File: " + outFile);
+                    }
                     finish();
                     break;
                 }

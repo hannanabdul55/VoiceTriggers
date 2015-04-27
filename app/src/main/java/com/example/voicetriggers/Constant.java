@@ -12,7 +12,7 @@ public class Constant {
     public static final int RESULT_INPUT_FILE = 1;
 
 
-    public static int SampleRate = 22050;
+    public static int SampleRate = 44100;
     public static boolean BigEndian = false;
     public static int bytesPerVal = 4;
     public static boolean signedData = false;
@@ -23,4 +23,10 @@ public class Constant {
     public static String PREF_KEY_TMP_FILE = "TEMP_FILE";
 
     public static String PREF_VOICE_LIST = "PREF_VOICE_LIST";
+
+    public static String PREF_SAMPLES = "VOICE_SAMPLES";
+    public static String PRES_SAMPLES_KEY = "VOICE_SAMPLES_KEY";
+
+    public static final int METHOD_ADD = 0;
+    public static final int METHOD_TEST = 1;
 }

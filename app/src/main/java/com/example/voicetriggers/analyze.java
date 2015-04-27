@@ -18,9 +18,9 @@ public class analyze {
     // constructor to read from files
     public analyze(String file1, String file2) {
         mData1 = getData(file1);
-        System.out.println(file1 + ": " + mData1.size() + " rows");
+//        System.out.println(file1 + ": " + mData1.size() + " rows");
         mData2 = getData(file2);
-        System.out.println(file2 + ": " + mData2.size() + " rows");
+//        System.out.println(file2 + ": " + mData2.size() + " rows");
         int len1 = mData1.size();
         int len2 = mData2.size();
         if (len1 < len2)
@@ -71,29 +71,26 @@ public class analyze {
             counter++;
             int prePlusOne = -1;
             float[] u = it.next();
-//			System.out.print("Data 1 [" + i + "] ~ Data 2 [ ");
             ListIterator<Integer> li = closest(u, mData2, 1.0f).listIterator(0);
             while (li.hasNext()) {
                 setVal = li.next();
-                System.out.print(setVal + "  ");
+//                System.out.print(setVal + "  ");
             }
             total++;
             System.out.println(" ] ");
             if (Math.abs(counter - setVal) < tol_btw_indices
                     || Math.abs(prev - setVal) < tol_btw_consec) {
-                // System.out.println(counter+"...."+setVal);
                 prev = setVal;
                 correct += 1;
-                System.out.println("correct");
+//                System.out.println("correct");
             } else {
-                System.out.println("XXX");
+//                System.out.println("XXX");
             }
             i++;
         }
 
         double result = 0.0;
         if (correct > lengthOfOutput) {
-//            System.out.println("Total Corect: 100%");
             result = 100;
         } else {
             result = (100.0 * correct / lengthOfOutput);
@@ -120,7 +117,7 @@ public class analyze {
                 bestDistance = temp;
             }
         }
-        System.out.print("(" + bestDistance + ") ");
+//        System.out.print("(" + bestDistance + ") ");
         LinkedList<Integer> ans = new LinkedList<Integer>();
         it = data.listIterator(0);
         int i = 0;

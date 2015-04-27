@@ -33,7 +33,10 @@
             android:label="@string/title_activity_record_audio_sample" />
         <activity
             android:name=".AddSampleActivity"
-            android:label="@string/title_activity_add_sample"></activity>
+            android:label="@string/title_activity_add_sample" />
+        <activity
+            android:name=".SpeechActivity"
+            android:label="@string/title_activity_speech"></activity>
     </application>
 
 </manifest>

@@ -7,7 +7,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity">
 
     <TextView
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose Audio Input file"
+        android:text="Add Trigger"
         android:id="@+id/button_choose"
         android:layout_gravity="center_horizontal"
         android:layout_weight="2" />
@@ -28,11 +28,11 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Run Recognizer"
         android:layout_gravity="center_horizontal"
         android:id="@+id/btn_run"
         android:layout_weight="2"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:text="Test Voice" />
 
     <Button
         android:layout_width="wrap_content"
