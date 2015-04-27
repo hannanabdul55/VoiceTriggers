@@ -175,6 +175,13 @@ public class SpeechActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        action_map.clear();
+        Config.voice_method = -1;
+    }
+
     private void initActivityParams() {
         final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -294,7 +301,6 @@ public class SpeechActivity extends Activity {
         if (id == R.id.action_settings) {
             return true;
         } else
-
             return super.onOptionsItemSelected(item);
     }
 
