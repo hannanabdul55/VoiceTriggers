@@ -180,6 +180,7 @@ public class SpeechActivity extends Activity {
         super.onStop();
         action_map.clear();
         Config.voice_method = -1;
+
     }
 
     private void initActivityParams() {
