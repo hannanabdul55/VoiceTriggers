@@ -19,7 +19,7 @@ public class VoiceAnalyzer {
         String selected = "";
         for (String t : samples.keySet()) {
             LinkedList<FloatData> samp = samples.get(t);
-            DTW runner = new DTW(samp, query);
+            Dtw runner = new Dtw(samp, query);
             Double temp = runner.newPrintAnalysis();
             if (temp < max_val) {
                 max_val = temp;
