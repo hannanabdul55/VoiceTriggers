@@ -1,35 +1,33 @@
 package com.example.voicetriggers;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ResolveInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -44,16 +42,14 @@ import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.util.AudioFileDataSource;
 import SphinxDemo.sphinx4.edu.cmu.sphinx.util.props.ConfigurationManager;
 
 
-public class SpeechActivity extends Activity {
+public class NumberActivity extends Activity {
 
     //Activity View Objects
-    Button btn_test;
-    Button btn_add;
+    Button btn_audio_add;
+    Button btn_audio_test;
     ListView list;
-    ApplicationListAdapter adapter;
-    ResolveInfo info;
-    String ID = "";
-    EditText txt_id;
+    int cur_state = -1;
+    TextView tv_num;
 
     //SPHINX specific variables
     DataProcessor last_d;
@@ -67,20 +63,21 @@ public class SpeechActivity extends Activity {
     boolean speechEnded = false;
     boolean isRecognizerInit = false;
 
-    //Action Map
-    Map<String, ResolveInfo> action_map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_speech);
-        startActivity(new Intent(getBaseContext(), NumberActivity.class));
+        setContentView(R.layout.activity_numbers);
         con = this;
-        action_map = new HashMap<String, ResolveInfo>();
         initActivityParams();
         try {
             init_sphinx_params();
         } catch (IOException e) {
+            Toast.makeText(this, "Unable to Initialize Sphinx parameters, try reinstalling the application", Toast.LENGTH_LONG).show();
+            isRecognizerInit = false;
+            Log.d("SPHINX_LOG", "PARAM_INIT_FAILURE");
+            e.printStackTrace();
+        } catch (Exception e) {
             Toast.makeText(this, "Unable to Initialize Sphinx parameters, try reinstalling the application", Toast.LENGTH_LONG).show();
             isRecognizerInit = false;
             Log.d("SPHINX_LOG", "PARAM_INIT_FAILURE");
@@ -98,16 +95,7 @@ public class SpeechActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        switch (Config.voice_method) {
-            case Constant.METHOD_ADD: {
-                ID = txt_id.getText().toString();
-                if (ID.length() < 1) {
-                    Toast.makeText(getBaseContext(), "ID is not entered", Toast.LENGTH_SHORT).show();
-                    Config.voice_method = -1;
-                }
 
-            }
-        }
     }
 
     @Override
@@ -120,43 +108,17 @@ public class SpeechActivity extends Activity {
     private void initActivityParams() {
         final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        list = (ListView) findViewById(R.id.app_list);
-        List pkgAppsList = con.getPackageManager().queryIntentActivities(mainIntent, 0);
-        if (pkgAppsList == null || pkgAppsList.size() < 1) {
-            Toast.makeText(getBaseContext(), "No applications found or error in loading application list", Toast.LENGTH_SHORT).show();
-
-        } else {
-            adapter = new ApplicationListAdapter(pkgAppsList, con);
-            info = adapter.getItem(0);
-            list.setAdapter(adapter);
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //startApp(adapter.getItem(position));
-                    Log.d("ITEM_CLICK", "Item " + position + " clicked");
-                    info = adapter.getItem(position);
-                }
-            });
-        }
-        btn_add = (Button) findViewById(R.id.btn_add_sample);
-        btn_test = (Button) findViewById(R.id.test_button);
-        txt_id = (EditText) findViewById(R.id.txt_id);
-        btn_add.setOnClickListener(new View.OnClickListener() {
+        btn_audio_add = (Button) findViewById(R.id.btn_number_record);
+        btn_audio_test = (Button) findViewById(R.id.btn_test_number);
+        tv_num = (TextView) findViewById(R.id.number);
+        btn_audio_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Config.voice_method = Constant.METHOD_ADD;
-                if (txt_id.getText().toString().length() < 1) {
-                    Toast.makeText(getBaseContext(), "Please do give a unique ID for the application", Toast.LENGTH_SHORT).show();
-                    Config.voice_method = -1;
-                } else {
-                    startActivityForResult(new Intent(con, RecordAudioSample.class), Constant.METHOD_ADD);
-                    //startActivity(new Intent(con, RecordAudioSample.class));
-                }
+                startActivityForResult(new Intent(con, RecordAudioSample.class), Constant.METHOD_ADD);
 
             }
         });
-        btn_test.setOnClickListener(new View.OnClickListener() {
+        btn_audio_test.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Config.voice_method = Constant.METHOD_TEST;
@@ -164,20 +126,6 @@ public class SpeechActivity extends Activity {
 
             }
         });
-    }
-
-    public void startApp(ResolveInfo item) {
-        ActivityInfo activity = item.activityInfo;
-        ComponentName name = new ComponentName(activity.applicationInfo.packageName,
-                activity.name);
-        Intent i = new Intent(Intent.ACTION_MAIN);
-
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        i.setComponent(name);
-
-        startActivity(i);
     }
 
 
@@ -196,6 +144,9 @@ public class SpeechActivity extends Activity {
             init_sphinx_params();
         } catch (IOException e) {
             Log.d("IOEXC", "In doRecognition");
+            e.printStackTrace();
+        } catch (Exception e) {
+            Log.d("EXC", "In doRecognition");
             e.printStackTrace();
         }
         ResultCollector.resetData();
@@ -257,13 +208,17 @@ public class SpeechActivity extends Activity {
                 }
                 doRecognition();
                 try {
+                    cur_state++;
+                    String ID = cur_state + "";
+
                     VoiceAnalyzer.samples.put(ID, ResultCollector.list);
-                    Log.d("ANALYSIS_RESULT", ID);
                     Set<String> list = samples.getStringSet(Constant.PRES_SAMPLES_KEY, new HashSet<String>());
                     list.add(ID);
                     samples_editor.putStringSet(Constant.PRES_SAMPLES_KEY, list);
-                    action_map.put(ID, info);
-                    Toast.makeText(getBaseContext(), "Added trigger to hashmap!", Toast.LENGTH_SHORT).show();
+                    tv_num.setText((cur_state + 1) + "");
+                    if (cur_state == 9) {
+                        btn_audio_test.setEnabled(true);
+                    }
                     Log.d("ACTION", ID);
 
                 } catch (Exception e) {
@@ -293,6 +248,7 @@ public class SpeechActivity extends Activity {
                 try {
                     AnalysisResult res = new AnalyzeTask().execute(ResultCollector.getList()).get();
                     Log.d("ANALYSIS_RESULT", res.tag);
+
                     Toast.makeText(getBaseContext(), "Testing", Toast.LENGTH_SHORT).show();
                 } catch (InterruptedException e) {
                     Toast.makeText(getBaseContext(), "Error while adding sample to database", Toast.LENGTH_LONG).show();
@@ -314,13 +270,22 @@ public class SpeechActivity extends Activity {
     /**
      * Initialize all the Sphinx specific parameters which is used later
      */
-    public void init_sphinx_params() throws IOException {
+    public void init_sphinx_params() throws IOException, Exception {
         if (audioURL == null)
             audioURL = new File("/sdcard/Download/hello.wav").toURI().toURL();
-
+        InputStream inputStream = getResources().openRawResource(R.raw.config);
         Log.d("AUDIO_URL", audioURL.getFile());
+        String s = "";
+        OutputStream outputStream = new FileOutputStream(new File(getFilesDir().getPath() + "/config.xml"));
+        int read = 0;
+        byte[] bytes = new byte[1024];
 
-        configURL = new File("/sdcard/Download/config.xml").toURI().toURL();
+        while ((read = inputStream.read(bytes)) != -1) {
+            outputStream.write(bytes, 0, read);
+        }
+        inputStream.close();
+        outputStream.close();
+        configURL = new File(getFilesDir().getPath() + "/config.xml").toURI().toURL();
 
         cm = new ConfigurationManager(configURL);
         frontend = (FrontEnd) cm.lookup("epFrontEnd");
@@ -359,14 +324,28 @@ public class SpeechActivity extends Activity {
                     Dialog d = new Dialog(con);
                     d.setCancelable(true);
                     d.setTitle("The max Match percentage is " + aDouble.res + "%! with tag: " + aDouble.tag);
-                    if ((aDouble.res) > 50.0 && action_map.containsKey(aDouble.tag)) {
-                        startApp(action_map.get(aDouble.tag));
+                    if ((aDouble.res) < 100) {
+                        new AlertDialog.Builder(con)
+                                .setMessage("The Number mapped to the voice is " + aDouble.tag)
+                                .setTitle("Trigger")
+                                .setNeutralButton("Done", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                })
+                                .create()
+                                .show();
                         Toast.makeText(getBaseContext(), "Action " + aDouble.tag + " triggered", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getBaseContext(), "No Trigger found!", Toast.LENGTH_SHORT).show();
                     }
                     Log.d("FILE_DELETE", "Deleted: " + audioURL.getFile());
-                    new File(audioURL.getPath()).delete();
+                    try {
+                        new File(audioURL.getPath()).delete();
+                    } catch (Exception e) {
+                        Toast.makeText(con, "Error while deleting file", Toast.LENGTH_SHORT).show();
+                    }
                     super.onPostExecute(aDouble);
                 }
             } catch (Exception e) {

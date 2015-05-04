@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
         //Initialize the Activity layout fields
         startActivity(new Intent(this, SpeechActivity.class));
         finish();
+
         initActivityParams();
         //Try Initializing the Sphinx parameters
         try {

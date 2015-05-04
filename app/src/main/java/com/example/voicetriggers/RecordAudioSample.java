@@ -1,6 +1,7 @@
 package com.example.voicetriggers;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -174,7 +175,7 @@ public class RecordAudioSample extends Activity {
         long totalAudioLen = 0;
         long totalDataLen = totalAudioLen + 36;
         long longSampleRate = RECORDER_SAMPLERATE;
-        int channels = 2;
+        int channels = 1;
         long byteRate = RECORDER_BPP * RECORDER_SAMPLERATE * channels / 8;
 
         byte[] data = new byte[bufferSize];
@@ -282,6 +283,15 @@ public class RecordAudioSample extends Activity {
                         Log.d("SAVE_TMP_PREF", "Shared teh temp file in shared preferences . FIle: " + outFile);
                         editor.putString(Constant.PREF_KEY_TMP_FILE, outFile);
                         editor.commit();
+
+                        Intent i = new Intent();
+                        i.putExtra(Constant.PREF_KEY_TMP_FILE, outFile);
+                        if (getParent() == null) {
+                            setResult(Activity.RESULT_OK, i);
+                        } else {
+
+                            getParent().setResult(Activity.RESULT_OK, i);
+                        }
                     } else {
                         Log.d("SAVE_TMP_PREF", "Shared teh temp file in shared preferences is empty .File: " + outFile);
                     }

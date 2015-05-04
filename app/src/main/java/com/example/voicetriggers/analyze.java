@@ -24,9 +24,9 @@ public class analyze {
         int len1 = mData1.size();
         int len2 = mData2.size();
         if (len1 < len2)
-            lengthOfOutput = len1;
-        else
             lengthOfOutput = len2;
+        else
+            lengthOfOutput = len1;
     }
 
     // constructor to directly take float values
@@ -77,7 +77,7 @@ public class analyze {
 //                System.out.print(setVal + "  ");
             }
             total++;
-            System.out.println(" ] ");
+//            System.out.println(" ] ");
             if (Math.abs(counter - setVal) < tol_btw_indices
                     || Math.abs(prev - setVal) < tol_btw_consec) {
                 prev = setVal;
@@ -90,16 +90,14 @@ public class analyze {
         }
 
         double result = 0.0;
-        if (correct > lengthOfOutput) {
-            result = 100;
-        } else {
-            result = (100.0 * correct / lengthOfOutput);
+
+        result = (100.0 * correct / lengthOfOutput);
 //            System.out.println("Total Correct: "
 //                    + result + " %");
 //
 //            System.out.println("Correct: " + correct + "\nTotal: " + total
 //                    + "\nLength of output: " + lengthOfOutput);
-        }
+
         return result;
     }
 
