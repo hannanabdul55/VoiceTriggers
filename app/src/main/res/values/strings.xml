@@ -16,4 +16,5 @@
     <string name="title_activity_record_audio_sample">RecordAudioSample</string>
     <string name="title_activity_add_sample">AddSampleActivity</string>
     <string name="title_activity_speech">SpeechActivity</string>
+    <string name="title_activity_numbers">Identify Numbers</string>
 </resources>

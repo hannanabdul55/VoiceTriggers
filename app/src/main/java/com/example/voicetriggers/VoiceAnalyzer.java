@@ -15,13 +15,13 @@ public class VoiceAnalyzer {
     static HashMap<String, LinkedList<FloatData>> samples = new HashMap<String, LinkedList<FloatData>>();
 
     public static AnalysisResult getActionForVoice(LinkedList<FloatData> query) {
-        Double max_val = Double.MIN_VALUE;
+        Double max_val = Double.MAX_VALUE;
         String selected = "";
         for (String t : samples.keySet()) {
             LinkedList<FloatData> samp = samples.get(t);
-            analyze runner = new analyze(samp, query);
+            DTW runner = new DTW(samp, query);
             Double temp = runner.newPrintAnalysis();
-            if (temp > max_val) {
+            if (temp < max_val) {
                 max_val = temp;
                 selected = t;
             }
