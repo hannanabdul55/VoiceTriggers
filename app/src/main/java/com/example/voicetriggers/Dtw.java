@@ -4,19 +4,17 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import SphinxDemo.sphinx4.edu.cmu.sphinx.frontend.FloatData;
 
-/**
- * Created by swathi-veeradhi on 24/03/15.
- */
 
-public class Dtw {
+public class DTW {
     // constructor to directly take float values
-    public Dtw(LinkedList<FloatData> m1, LinkedList<FloatData> m2) {
+    public DTW(LinkedList<FloatData> m1, LinkedList<FloatData> m2) {
         //TEMPORARY HACK
-        LinkedList<float[]> m1_t = new LinkedList<float[]>();
+        ArrayList<float[]> m1_t = new ArrayList<float[]>();
         if (m1 == null) {
             Log.d("M1_NULL", "TRUE");
         }
@@ -24,21 +22,27 @@ public class Dtw {
             m1_t.add(f.getValues());
         }
 
-        LinkedList<float[]> m2_t = new LinkedList<float[]>();
+        ArrayList<float[]> m2_t = new ArrayList<float[]>();
         for (FloatData f : m2) {
             m2_t.add(f.getValues());
         }
         mData1 = m1_t;
         mData2 = m2_t;
+        int len1 = mData1.size();
+        int len2 = mData2.size();
+        if (len1 < len2)
+            lengthOfOutput = len2;
+        else
+            lengthOfOutput = len1;
     }
 
-    private LinkedList<float[]> mData1, mData2;
+    private ArrayList<float[]> mData1, mData2;
     private int tol_btw_indices = 15;
     private int tol_btw_consec = 10;
     private int lengthOfOutput = 0;
 
     //constructor to read from files
-    public Dtw(String file1, String file2) {
+    public DTW(String file1, String file2) {
         mData1 = getData(file1);
         System.out.println(file1 + ": " + mData1.size() + " rows");
         mData2 = getData(file2);
@@ -51,11 +55,11 @@ public class Dtw {
             lengthOfOutput = len2;
     }
 
-    private LinkedList<float[]> getData(String filename) {
+    private ArrayList<float[]> getData(String filename) {
         try {
             BufferedReader reader =
                     new BufferedReader(new FileReader(filename));
-            LinkedList<float[]> ans = new LinkedList<float[]>();
+            ArrayList<float[]> ans = new ArrayList<float[]>();
             float[] dummy = new float[39];
             for (int i = 0; i < 39; i++) {
                 dummy[i] = 0.0f;
@@ -98,9 +102,11 @@ public class Dtw {
                 //System.out.println("i:"+i+"   j:"+j);
                 cost = d(mData1.get(i), mData2.get(j));
                 dtw[i][j] = cost + min(dtw[i - 1][j], dtw[i][j - 1], dtw[i - 1][j - 1]);
-                System.out.println("i: " + i + "    j:" + j + "   val:" + dtw[i][j]);
+                //System.out.println("i: "+i+"    j:"+j+"   val:"+dtw[i][j]);
             }
         }
+        if (n < 2 || m < 2)
+            return Double.MAX_VALUE;
         return (double) (dtw[n - 1][m - 1]) * 2 / (i + j);
 
     }
